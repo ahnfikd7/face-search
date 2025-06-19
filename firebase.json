@@ -1,0 +1,29 @@
+{
+  "hosting": {
+    "public": "public",
+    "rewrites": [
+      {
+        "source": "/search/**",
+        "run": {
+          "serviceId": "face-search-api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/socket.io",
+        "run": { "serviceId": "face-search-api", "region": "us-central1" }
+      },
+      {
+        "source": "/socket.io/**",
+        "run": {
+          "serviceId": "face-search-api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Face-Search Video Demo</title>
+  <style>
+    body { display:flex; flex-direction:column; align-items:center; padding:20px; font-family:sans-serif; }
+    video { border:1px solid #ccc; border-radius:4px; }
+    #log { margin-top:10px; max-width:320px; font-size:14px; }
+  </style>
+</head>
+<body>
+  <h2>Real-Time Face-Search</h2>
+  <video id="vid" autoplay muted playsinline width="320" height="240"></video>
+  <pre id="log">Waiting for video…</pre>
+
+  <!-- Socket.IO client -->
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script>
+    const video = document.getElementById("vid");
+    const log   = document.getElementById("log");
+
+    // 1) Start webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        video.addEventListener("playing", startStreaming);
+      })
+      .catch(err => log.textContent = "Webcam error: " + err);
+
+    // 2) Connect to your Firebase-hosted API
+    const SOCKET_URL = "https://face-search-api-805614536046.us-central1.run.app";
+    const socket = io(SOCKET_URL);
+
+    socket.on("connect", () => log.textContent = "Connected to API");
+    socket.on("disconnect", () => log.textContent = "Disconnected");
+
+    // 3) Send frames ~10 FPS
+    const canvas = document.createElement("canvas");
+    function startStreaming() {
+      canvas.width  = 320;
+      canvas.height = 240;
+      (function sendFrame() {
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, 320, 240);
+        canvas.toBlob(blob => socket.emit("frame", blob), "image/jpeg", 0.5);
+        setTimeout(sendFrame, 100);
+      })();
+    }
+
+    // 4) Receive and display matches
+    socket.on("matches", ({ matches }) => {
+      log.textContent = "Top-5 matches:\n" + matches.join("\n");
+    });
+  </script>
+</body>
+</html>

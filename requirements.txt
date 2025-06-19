@@ -1,0 +1,10 @@
+fastapi 
+uvicorn[standard] 
+python-multipart
+mtcnn 
+opencv-python 
+facenet-pytorch 
+faiss-cpu 
+numpy
+python-socketio[asyncio]
+
